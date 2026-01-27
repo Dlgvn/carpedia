@@ -51,7 +51,18 @@
     .car-info .brand-year {
         color: #666;
         font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+    }
+    .car-info .generation-info {
+        color: #888;
+        font-size: 0.95rem;
         margin-bottom: 1.5rem;
+    }
+    .car-info .generation-info span {
+        background: #f0f0f0;
+        padding: 0.2rem 0.6rem;
+        border-radius: 4px;
+        margin-right: 0.5rem;
     }
     .car-info .price {
         font-size: 2rem;
@@ -117,6 +128,12 @@
         <div class="car-info">
             <h1>{{ car.name }}</h1>
             <p class="brand-year">{{ car.brand }}{% if car.year %} &bull; {{ car.year }}{% endif %}</p>
+            {% if car.generation_code or car.generation_years %}
+            <p class="generation-info">
+                {% if car.generation_code %}<span>{{ car.generation_code }}</span>{% endif %}
+                {% if car.generation_years %}<span>{{ car.generation_years }}</span>{% endif %}
+            </p>
+            {% endif %}
             {% if car.price %}
             <p class="price">${{ car.price|floatformat:0|intcomma }}</p>
             {% endif %}
@@ -126,22 +143,48 @@
             {% endif %}
 
             <div class="specs-grid">
+                {% if car.engine %}
                 <div class="spec-item">
                     <div class="label">Engine</div>
                     <div class="value">{{ car.engine }}</div>
                 </div>
+                {% endif %}
+                {% if car.horsepower %}
                 <div class="spec-item">
                     <div class="label">Horsepower</div>
                     <div class="value">{{ car.horsepower }} HP</div>
                 </div>
+                {% endif %}
+                {% if car.top_speed %}
                 <div class="spec-item">
                     <div class="label">Top Speed</div>
                     <div class="value">{{ car.top_speed }} km/h</div>
                 </div>
+                {% endif %}
+                {% if car.acceleration %}
                 <div class="spec-item">
                     <div class="label">0-100 km/h</div>
                     <div class="value">{{ car.acceleration }}s</div>
                 </div>
+                {% endif %}
+                {% if car.transmission %}
+                <div class="spec-item">
+                    <div class="label">Transmission</div>
+                    <div class="value">{{ car.transmission }}</div>
+                </div>
+                {% endif %}
+                {% if car.fuel_type %}
+                <div class="spec-item">
+                    <div class="label">Fuel Type</div>
+                    <div class="value">{{ car.fuel_type }}</div>
+                </div>
+                {% endif %}
+                {% if car.body_style %}
+                <div class="spec-item">
+                    <div class="label">Body Style</div>
+                    <div class="value">{{ car.body_style }}</div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

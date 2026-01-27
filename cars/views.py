@@ -43,3 +43,32 @@ def car_list(request):
 def car_detail(request, pk):
     car = get_object_or_404(Car, pk=pk)
     return render(request, 'cars/car_detail.html', {'car': car})
+
+
+def car_compare(request):
+    """Compare up to 4 cars side by side."""
+    car_ids_str = request.GET.get('cars', '')
+    car_ids = [int(id) for id in car_ids_str.split(',') if id.strip().isdigit()]
+    cars = list(Car.objects.filter(pk__in=car_ids)[:4])
+
+    # Define specs to compare with labels
+    specs = [
+        ('brand', 'Brand'),
+        ('year', 'Year'),
+        ('generation_code', 'Generation'),
+        ('generation_years', 'Production Years'),
+        ('engine', 'Engine'),
+        ('horsepower', 'Horsepower'),
+        ('top_speed', 'Top Speed (km/h)'),
+        ('acceleration', '0-100 km/h (s)'),
+        ('transmission', 'Transmission'),
+        ('fuel_type', 'Fuel Type'),
+        ('body_style', 'Body Style'),
+        ('price', 'Price (USD)'),
+    ]
+
+    context = {
+        'cars': cars,
+        'specs': specs,
+    }
+    return render(request, 'cars/car_compare.html', context)
