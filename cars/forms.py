@@ -31,20 +31,6 @@ class CarFilterForm(forms.Form):
             'class': 'form-control'
         })
     )
-    price_min = forms.DecimalField(
-        required=False,
-        widget=forms.NumberInput(attrs={
-            'placeholder': 'Min price',
-            'class': 'form-control'
-        })
-    )
-    price_max = forms.DecimalField(
-        required=False,
-        widget=forms.NumberInput(attrs={
-            'placeholder': 'Max price',
-            'class': 'form-control'
-        })
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

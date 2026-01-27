@@ -105,16 +105,21 @@
 
 <article class="car-detail">
     <div class="car-detail-header">
-        {% if car.image %}
-        <img src="{{ car.image.url }}" alt="{{ car.name }}" class="car-image">
+        {% with car.get_image_url as img_url %}
+        {% if img_url %}
+        <img src="{{ img_url }}" alt="{{ car.name }}" class="car-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="car-image-placeholder" style="display: none;">&#128663;</div>
         {% else %}
         <div class="car-image-placeholder">&#128663;</div>
         {% endif %}
+        {% endwith %}
 
         <div class="car-info">
             <h1>{{ car.name }}</h1>
-            <p class="brand-year">{{ car.brand }} &bull; {{ car.year }}</p>
+            <p class="brand-year">{{ car.brand }}{% if car.year %} &bull; {{ car.year }}{% endif %}</p>
+            {% if car.price %}
             <p class="price">${{ car.price|floatformat:0|intcomma }}</p>
+            {% endif %}
 
             {% if car.description %}
             <p class="description">{{ car.description }}</p>

@@ -28,14 +28,6 @@ def car_list(request):
     if year_max:
         cars = cars.filter(year__lte=year_max)
 
-    price_min = request.GET.get('price_min')
-    if price_min:
-        cars = cars.filter(price__gte=price_min)
-
-    price_max = request.GET.get('price_max')
-    if price_max:
-        cars = cars.filter(price__lte=price_max)
-
     paginator = Paginator(cars, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)

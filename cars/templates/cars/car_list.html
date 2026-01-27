@@ -155,12 +155,6 @@
                 <span style="display: block; text-align: center; margin: 0.3rem 0;">to</span>
                 {{ filter_form.year_max }}
             </div>
-            <div class="filter-group">
-                <label>Price Range ($)</label>
-                {{ filter_form.price_min }}
-                <span style="display: block; text-align: center; margin: 0.3rem 0;">to</span>
-                {{ filter_form.price_max }}
-            </div>
             <div class="filter-actions">
                 <button type="submit" class="btn">Apply</button>
                 <a href="{% url 'cars:car_list' %}" class="btn btn-secondary">Clear</a>
@@ -173,11 +167,14 @@
         <div class="car-grid">
             {% for car in page_obj %}
             <article class="car-card">
-                {% if car.image %}
-                <img src="{{ car.image.url }}" alt="{{ car.name }}">
+                {% with car.get_image_url as img_url %}
+                {% if img_url %}
+                <img src="{{ img_url }}" alt="{{ car.name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="no-image" style="display: none;">&#128663;</div>
                 {% else %}
                 <div class="no-image">&#128663;</div>
                 {% endif %}
+                {% endwith %}
                 <div class="car-card-body">
                     <h3><a href="{% url 'cars:car_detail' car.pk %}">{{ car.name }}</a></h3>
                     <p class="brand">{{ car.brand }} &bull; {{ car.year }}</p>
@@ -185,7 +182,9 @@
                         <span>{{ car.horsepower }} HP</span>
                         <span>{{ car.top_speed }} km/h</span>
                     </div>
+                    {% if car.price %}
                     <p class="price">${{ car.price|floatformat:0|intcomma }}</p>
+                    {% endif %}
                 </div>
             </article>
             {% endfor %}
