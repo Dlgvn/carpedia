@@ -1,0 +1,144 @@
+{% extends 'cars/base.html' %}
+{% load humanize %}
+
+{% block title %}{{ car.name }} - Carpedia{% endblock %}
+
+{% block extra_css %}
+<style>
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1.5rem;
+        color: #666;
+        text-decoration: none;
+    }
+    .back-link:hover {
+        color: #e94560;
+    }
+    .car-detail {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    }
+    .car-detail-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+    .car-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+    }
+    .car-image-placeholder {
+        width: 100%;
+        height: 400px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 6rem;
+    }
+    .car-info {
+        padding: 2rem;
+    }
+    .car-info h1 {
+        font-size: 2rem;
+        color: #1a1a2e;
+        margin-bottom: 0.5rem;
+    }
+    .car-info .brand-year {
+        color: #666;
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+    }
+    .car-info .price {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #e94560;
+        margin-bottom: 1.5rem;
+    }
+    .car-info .description {
+        color: #555;
+        margin-bottom: 1.5rem;
+        line-height: 1.8;
+    }
+    .specs-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    .spec-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 6px;
+    }
+    .spec-item .label {
+        font-size: 0.85rem;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .spec-item .value {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #1a1a2e;
+        margin-top: 0.3rem;
+    }
+    @media (max-width: 768px) {
+        .car-detail-header {
+            grid-template-columns: 1fr;
+        }
+        .car-image, .car-image-placeholder {
+            height: 250px;
+        }
+        .specs-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'cars:car_list' %}" class="back-link">&larr; Back to Catalog</a>
+
+<article class="car-detail">
+    <div class="car-detail-header">
+        {% if car.image %}
+        <img src="{{ car.image.url }}" alt="{{ car.name }}" class="car-image">
+        {% else %}
+        <div class="car-image-placeholder">&#128663;</div>
+        {% endif %}
+
+        <div class="car-info">
+            <h1>{{ car.name }}</h1>
+            <p class="brand-year">{{ car.brand }} &bull; {{ car.year }}</p>
+            <p class="price">${{ car.price|floatformat:0|intcomma }}</p>
+
+            {% if car.description %}
+            <p class="description">{{ car.description }}</p>
+            {% endif %}
+
+            <div class="specs-grid">
+                <div class="spec-item">
+                    <div class="label">Engine</div>
+                    <div class="value">{{ car.engine }}</div>
+                </div>
+                <div class="spec-item">
+                    <div class="label">Horsepower</div>
+                    <div class="value">{{ car.horsepower }} HP</div>
+                </div>
+                <div class="spec-item">
+                    <div class="label">Top Speed</div>
+                    <div class="value">{{ car.top_speed }} km/h</div>
+                </div>
+                <div class="spec-item">
+                    <div class="label">0-100 km/h</div>
+                    <div class="value">{{ car.acceleration }}s</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+{% endblock %}

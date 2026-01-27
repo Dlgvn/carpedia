@@ -1,0 +1,216 @@
+{% extends 'cars/base.html' %}
+{% load humanize %}
+
+{% block title %}Carpedia - Car Catalog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .main-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+    }
+    .sidebar {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        height: fit-content;
+    }
+    .sidebar h3 {
+        margin-bottom: 1rem;
+        color: #1a1a2e;
+        border-bottom: 2px solid #e94560;
+        padding-bottom: 0.5rem;
+    }
+    .filter-group {
+        margin-bottom: 1rem;
+    }
+    .filter-group label {
+        display: block;
+        margin-bottom: 0.3rem;
+        font-weight: 500;
+        color: #555;
+    }
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .car-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    .car-card {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .car-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .car-card img {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+    }
+    .car-card .no-image {
+        width: 100%;
+        height: 180px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+    }
+    .car-card-body {
+        padding: 1rem;
+    }
+    .car-card h3 {
+        margin-bottom: 0.5rem;
+        color: #1a1a2e;
+    }
+    .car-card h3 a {
+        color: inherit;
+        text-decoration: none;
+    }
+    .car-card h3 a:hover {
+        color: #e94560;
+    }
+    .car-card .brand {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    .car-card .specs {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: #888;
+        margin-bottom: 0.5rem;
+    }
+    .car-card .price {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #e94560;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+    .pagination a, .pagination span {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #333;
+    }
+    .pagination a:hover {
+        background: #e94560;
+        color: white;
+        border-color: #e94560;
+    }
+    .pagination .current {
+        background: #1a1a2e;
+        color: white;
+        border-color: #1a1a2e;
+    }
+    .no-results {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+    @media (max-width: 768px) {
+        .main-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-layout">
+    <aside class="sidebar">
+        <form method="get" action="">
+            <h3>Search</h3>
+            <div class="filter-group">
+                {{ search_form.query }}
+            </div>
+
+            <h3>Filters</h3>
+            <div class="filter-group">
+                <label>Brand</label>
+                {{ filter_form.brand }}
+            </div>
+            <div class="filter-group">
+                <label>Year Range</label>
+                {{ filter_form.year_min }}
+                <span style="display: block; text-align: center; margin: 0.3rem 0;">to</span>
+                {{ filter_form.year_max }}
+            </div>
+            <div class="filter-group">
+                <label>Price Range ($)</label>
+                {{ filter_form.price_min }}
+                <span style="display: block; text-align: center; margin: 0.3rem 0;">to</span>
+                {{ filter_form.price_max }}
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn">Apply</button>
+                <a href="{% url 'cars:car_list' %}" class="btn btn-secondary">Clear</a>
+            </div>
+        </form>
+    </aside>
+
+    <section>
+        {% if page_obj %}
+        <div class="car-grid">
+            {% for car in page_obj %}
+            <article class="car-card">
+                {% if car.image %}
+                <img src="{{ car.image.url }}" alt="{{ car.name }}">
+                {% else %}
+                <div class="no-image">&#128663;</div>
+                {% endif %}
+                <div class="car-card-body">
+                    <h3><a href="{% url 'cars:car_detail' car.pk %}">{{ car.name }}</a></h3>
+                    <p class="brand">{{ car.brand }} &bull; {{ car.year }}</p>
+                    <div class="specs">
+                        <span>{{ car.horsepower }} HP</span>
+                        <span>{{ car.top_speed }} km/h</span>
+                    </div>
+                    <p class="price">${{ car.price|floatformat:0|intcomma }}</p>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">&laquo; Prev</a>
+            {% endif %}
+
+            <span class="current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="no-results">
+            <h2>No cars found</h2>
+            <p>Try adjusting your search or filter criteria.</p>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
