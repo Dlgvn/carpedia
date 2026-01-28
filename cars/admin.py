@@ -1,30 +1,39 @@
 from django.contrib import admin
-from .models import Car
+from .models import Car, Generation
+
+
+class GenerationInline(admin.TabularInline):
+    model = Generation
+    extra = 1
+    fields = ['name', 'code', 'year_start', 'year_end', 'engine', 'horsepower', 'torque', 'top_speed', 'acceleration', 'transmission']
 
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    list_display = ['name', 'brand', 'year', 'generation_code', 'horsepower', 'body_style', 'data_source', 'created_at']
-    list_filter = ['brand', 'year', 'body_style', 'fuel_type', 'data_source']
-    search_fields = ['name', 'brand', 'description', 'generation_code', 'engine']
-    ordering = ['-created_at']
-    readonly_fields = ['wikipedia_page_id', 'wiki_page_id', 'created_at']
+    list_display = ['name', 'brand', 'body_style', 'production_years', 'data_source', 'created_at']
+    list_filter = ['brand', 'body_style', 'data_source']
+    search_fields = ['name', 'brand', 'description']
+    ordering = ['brand', 'name']
+    readonly_fields = ['wiki_page_id', 'created_at']
+    inlines = [GenerationInline]
 
     fieldsets = (
         (None, {
-            'fields': ('name', 'brand', 'year', 'description')
+            'fields': ('name', 'brand', 'description')
         }),
-        ('Generation Info', {
-            'fields': ('generation_code', 'generation_years')
-        }),
-        ('Specifications', {
-            'fields': ('engine', 'horsepower', 'top_speed', 'acceleration', 'transmission', 'fuel_type', 'body_style')
-        }),
-        ('Pricing & Images', {
-            'fields': ('price', 'image', 'image_url')
+        ('Classification', {
+            'fields': ('body_style', 'car_class', 'production_years')
         }),
         ('Data Source', {
-            'fields': ('data_source', 'wiki_page_id', 'wikipedia_page_id', 'created_at'),
+            'fields': ('data_source', 'wiki_page_id', 'created_at'),
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(Generation)
+class GenerationAdmin(admin.ModelAdmin):
+    list_display = ['__str__', 'car', 'year_start', 'year_end', 'engine', 'horsepower']
+    list_filter = ['car__brand', 'year_start']
+    search_fields = ['car__name', 'car__brand', 'name', 'code', 'engine']
+    autocomplete_fields = ['car']

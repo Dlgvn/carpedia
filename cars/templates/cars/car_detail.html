@@ -1,7 +1,6 @@
 {% extends 'cars/base.html' %}
-{% load humanize %}
 
-{% block title %}{{ car.name }} - Carpedia{% endblock %}
+{% block title %}{{ car.brand }} {{ car.name }} - Carpedia{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -25,14 +24,34 @@
         grid-template-columns: 1fr 1fr;
         gap: 2rem;
     }
-    .car-image {
-        width: 100%;
+
+    /* Image Gallery */
+    .gallery-container {
+        position: relative;
+        background: #f5f5f5;
+    }
+    .gallery-main {
+        position: relative;
         height: 400px;
+        overflow: hidden;
+    }
+    .gallery-slides {
+        display: flex;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    .gallery-slide {
+        min-width: 100%;
+        height: 100%;
+    }
+    .gallery-slide img {
+        width: 100%;
+        height: 100%;
         object-fit: cover;
     }
-    .car-image-placeholder {
+    .gallery-placeholder {
         width: 100%;
-        height: 400px;
+        height: 100%;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
         align-items: center;
@@ -40,6 +59,45 @@
         color: white;
         font-size: 6rem;
     }
+    .gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255,255,255,0.9);
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        z-index: 10;
+    }
+    .gallery-nav:hover {
+        background: white;
+    }
+    .gallery-prev { left: 10px; }
+    .gallery-next { right: 10px; }
+    .gallery-dots {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        padding: 1rem;
+    }
+    .gallery-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #ddd;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .gallery-dot.active {
+        background: #e94560;
+    }
+
+    /* Car Info */
     .car-info {
         padding: 2rem;
     }
@@ -48,32 +106,61 @@
         color: #1a1a2e;
         margin-bottom: 0.5rem;
     }
-    .car-info .brand-year {
+    .car-info .brand-info {
         color: #666;
         font-size: 1.1rem;
-        margin-bottom: 0.5rem;
-    }
-    .car-info .generation-info {
-        color: #888;
-        font-size: 0.95rem;
-        margin-bottom: 1.5rem;
-    }
-    .car-info .generation-info span {
-        background: #f0f0f0;
-        padding: 0.2rem 0.6rem;
-        border-radius: 4px;
-        margin-right: 0.5rem;
-    }
-    .car-info .price {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #e94560;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1rem;
     }
     .car-info .description {
         color: #555;
         margin-bottom: 1.5rem;
         line-height: 1.8;
+    }
+
+    /* Generation Selector */
+    .generation-selector {
+        margin-bottom: 1.5rem;
+    }
+    .generation-selector label {
+        display: block;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin-bottom: 0.5rem;
+    }
+    .generation-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .gen-btn {
+        padding: 0.5rem 1rem;
+        border: 2px solid #ddd;
+        border-radius: 20px;
+        background: white;
+        color: #333;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    .gen-btn:hover {
+        border-color: #e94560;
+        color: #e94560;
+    }
+    .gen-btn.active {
+        background: #e94560;
+        border-color: #e94560;
+        color: white;
+    }
+
+    /* Specs Grid */
+    .specs-section {
+        margin-top: 1.5rem;
+    }
+    .specs-section h3 {
+        color: #1a1a2e;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e94560;
     }
     .specs-grid {
         display: grid;
@@ -92,16 +179,17 @@
         letter-spacing: 0.5px;
     }
     .spec-item .value {
-        font-size: 1.3rem;
-        font-weight: bold;
+        font-size: 1.1rem;
+        font-weight: 600;
         color: #1a1a2e;
         margin-top: 0.3rem;
     }
+
     @media (max-width: 768px) {
         .car-detail-header {
             grid-template-columns: 1fr;
         }
-        .car-image, .car-image-placeholder {
+        .gallery-main {
             height: 250px;
         }
         .specs-grid {
@@ -116,77 +204,155 @@
 
 <article class="car-detail">
     <div class="car-detail-header">
-        {% with car.get_image_url as img_url %}
-        {% if img_url %}
-        <img src="{{ img_url }}" alt="{{ car.name }}" class="car-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="car-image-placeholder" style="display: none;">&#128663;</div>
-        {% else %}
-        <div class="car-image-placeholder">&#128663;</div>
-        {% endif %}
-        {% endwith %}
+        <!-- Image Gallery -->
+        <div class="gallery-container">
+            <div class="gallery-main">
+                <div class="gallery-slides" id="gallerySlides">
+                    {% for img_url in gallery_images %}
+                    <div class="gallery-slide">
+                        <img src="{{ img_url }}" alt="{{ car.name }} - View {{ forloop.counter }}" onerror="this.parentElement.innerHTML='<div class=\'gallery-placeholder\'>&#128663;</div>'">
+                    </div>
+                    {% empty %}
+                    <div class="gallery-slide">
+                        <div class="gallery-placeholder">&#128663;</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if gallery_images|length > 1 %}
+                <button class="gallery-nav gallery-prev" onclick="prevSlide()">&lt;</button>
+                <button class="gallery-nav gallery-next" onclick="nextSlide()">&gt;</button>
+                {% endif %}
+            </div>
+            {% if gallery_images|length > 1 %}
+            <div class="gallery-dots">
+                {% for img_url in gallery_images %}
+                <button class="gallery-dot {% if forloop.first %}active{% endif %}" onclick="goToSlide({{ forloop.counter0 }})"></button>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
 
+        <!-- Car Info -->
         <div class="car-info">
             <h1>{{ car.name }}</h1>
-            <p class="brand-year">{{ car.brand }}{% if car.year %} &bull; {{ car.year }}{% endif %}</p>
-            {% if car.generation_code or car.generation_years %}
-            <p class="generation-info">
-                {% if car.generation_code %}<span>{{ car.generation_code }}</span>{% endif %}
-                {% if car.generation_years %}<span>{{ car.generation_years }}</span>{% endif %}
+            <p class="brand-info">
+                {{ car.brand }}
+                {% if car.production_years %} &bull; {{ car.production_years }}{% endif %}
+                {% if car.body_style %} &bull; {{ car.body_style }}{% endif %}
             </p>
-            {% endif %}
-            {% if car.price %}
-            <p class="price">${{ car.price|floatformat:0|intcomma }}</p>
-            {% endif %}
 
             {% if car.description %}
             <p class="description">{{ car.description }}</p>
             {% endif %}
 
-            <div class="specs-grid">
-                {% if car.engine %}
-                <div class="spec-item">
-                    <div class="label">Engine</div>
-                    <div class="value">{{ car.engine }}</div>
+            <!-- Generation Selector -->
+            {% if generations|length > 1 %}
+            <div class="generation-selector">
+                <label>Select Generation:</label>
+                <div class="generation-buttons">
+                    {% for gen in generations %}
+                    <a href="?gen={{ gen.pk }}" class="gen-btn {% if gen == selected_gen %}active{% endif %}">
+                        {% if gen.name %}{{ gen.name }}{% else %}{{ gen.year_start|default:"?" }}-{{ gen.year_end|default:"present" }}{% endif %}
+                    </a>
+                    {% endfor %}
                 </div>
-                {% endif %}
-                {% if car.horsepower %}
-                <div class="spec-item">
-                    <div class="label">Horsepower</div>
-                    <div class="value">{{ car.horsepower }} HP</div>
-                </div>
-                {% endif %}
-                {% if car.top_speed %}
-                <div class="spec-item">
-                    <div class="label">Top Speed</div>
-                    <div class="value">{{ car.top_speed }} km/h</div>
-                </div>
-                {% endif %}
-                {% if car.acceleration %}
-                <div class="spec-item">
-                    <div class="label">0-100 km/h</div>
-                    <div class="value">{{ car.acceleration }}s</div>
-                </div>
-                {% endif %}
-                {% if car.transmission %}
-                <div class="spec-item">
-                    <div class="label">Transmission</div>
-                    <div class="value">{{ car.transmission }}</div>
-                </div>
-                {% endif %}
-                {% if car.fuel_type %}
-                <div class="spec-item">
-                    <div class="label">Fuel Type</div>
-                    <div class="value">{{ car.fuel_type }}</div>
-                </div>
-                {% endif %}
-                {% if car.body_style %}
-                <div class="spec-item">
-                    <div class="label">Body Style</div>
-                    <div class="value">{{ car.body_style }}</div>
-                </div>
-                {% endif %}
             </div>
+            {% endif %}
+
+            <!-- Specs for Selected Generation -->
+            {% if selected_gen %}
+            <div class="specs-section">
+                <h3>Specifications{% if selected_gen.name %} - {{ selected_gen.name }}{% endif %}</h3>
+                <div class="specs-grid">
+                    {% if selected_gen.engine %}
+                    <div class="spec-item">
+                        <div class="label">Engine</div>
+                        <div class="value">{{ selected_gen.engine }}</div>
+                    </div>
+                    {% endif %}
+                    {% if selected_gen.horsepower %}
+                    <div class="spec-item">
+                        <div class="label">Horsepower</div>
+                        <div class="value">{{ selected_gen.horsepower }}</div>
+                    </div>
+                    {% endif %}
+                    {% if selected_gen.torque %}
+                    <div class="spec-item">
+                        <div class="label">Torque</div>
+                        <div class="value">{{ selected_gen.torque }}</div>
+                    </div>
+                    {% endif %}
+                    {% if selected_gen.top_speed %}
+                    <div class="spec-item">
+                        <div class="label">Top Speed</div>
+                        <div class="value">{{ selected_gen.top_speed }}</div>
+                    </div>
+                    {% endif %}
+                    {% if selected_gen.acceleration %}
+                    <div class="spec-item">
+                        <div class="label">0-60 / 0-100</div>
+                        <div class="value">{{ selected_gen.acceleration }}</div>
+                    </div>
+                    {% endif %}
+                    {% if selected_gen.transmission %}
+                    <div class="spec-item">
+                        <div class="label">Transmission</div>
+                        <div class="value">{{ selected_gen.transmission }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </article>
+
+<script>
+    let currentSlide = 0;
+    const totalSlides = {{ gallery_images|length|default:1 }};
+
+    function updateGallery() {
+        const slides = document.getElementById('gallerySlides');
+        if (slides) {
+            slides.style.transform = `translateX(-${currentSlide * 100}%)`;
+        }
+
+        // Update dots
+        document.querySelectorAll('.gallery-dot').forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentSlide);
+        });
+    }
+
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        updateGallery();
+    }
+
+    function prevSlide() {
+        currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+        updateGallery();
+    }
+
+    function goToSlide(index) {
+        currentSlide = index;
+        updateGallery();
+    }
+
+    // Touch/swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.querySelector('.gallery-main')?.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.querySelector('.gallery-main')?.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        if (touchStartX - touchEndX > 50) {
+            nextSlide();
+        } else if (touchEndX - touchStartX > 50) {
+            prevSlide();
+        }
+    });
+</script>
 {% endblock %}

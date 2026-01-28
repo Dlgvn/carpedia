@@ -1,5 +1,4 @@
 {% extends 'cars/base.html' %}
-{% load humanize %}
 
 {% block title %}Carpedia - Car Catalog{% endblock %}
 
@@ -87,17 +86,9 @@
         font-size: 0.9rem;
         margin-bottom: 0.5rem;
     }
-    .car-card .specs {
-        display: flex;
-        gap: 1rem;
+    .car-card .info {
         font-size: 0.85rem;
         color: #888;
-        margin-bottom: 0.5rem;
-    }
-    .car-card .price {
-        font-size: 1.1rem;
-        font-weight: bold;
-        color: #e94560;
     }
     .pagination {
         display: flex;
@@ -281,14 +272,11 @@
                 </div>
                 <div class="car-card-body">
                     <h3><a href="{% url 'cars:car_detail' car.pk %}">{{ car.name }}</a></h3>
-                    <p class="brand">{{ car.brand }} &bull; {{ car.year }}</p>
-                    <div class="specs">
-                        <span>{{ car.horsepower }} HP</span>
-                        <span>{{ car.top_speed }} km/h</span>
-                    </div>
-                    {% if car.price %}
-                    <p class="price">${{ car.price|floatformat:0|intcomma }}</p>
-                    {% endif %}
+                    <p class="brand">{{ car.brand }}</p>
+                    <p class="info">
+                        {% if car.body_style %}{{ car.body_style }}{% endif %}
+                        {% if car.production_years %} &bull; {{ car.production_years }}{% endif %}
+                    </p>
                 </div>
             </article>
             {% endfor %}

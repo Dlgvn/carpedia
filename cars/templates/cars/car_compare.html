@@ -1,5 +1,5 @@
 {% extends 'cars/base.html' %}
-{% load humanize car_extras %}
+{% load car_extras %}
 
 {% block title %}Compare Cars - Carpedia{% endblock %}
 
@@ -14,111 +14,97 @@
     .back-link:hover {
         color: #e94560;
     }
-    .compare-header {
-        margin-bottom: 2rem;
-    }
-    .compare-header h1 {
-        color: #1a1a2e;
-    }
-    .compare-empty {
-        background: white;
-        padding: 3rem;
-        border-radius: 8px;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .compare-empty h2 {
-        color: #666;
-        margin-bottom: 1rem;
-    }
-    .compare-table-container {
+    .compare-container {
         background: white;
         border-radius: 8px;
-        overflow-x: auto;
+        overflow: hidden;
         box-shadow: 0 2px 15px rgba(0,0,0,0.1);
     }
-    .compare-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 600px;
+    .compare-header {
+        display: grid;
+        grid-template-columns: 200px repeat({{ cars_with_specs|length }}, 1fr);
+        border-bottom: 2px solid #e94560;
     }
-    .compare-table th,
-    .compare-table td {
+    .compare-header .label-cell {
         padding: 1rem;
-        text-align: left;
-        border-bottom: 1px solid #eee;
-    }
-    .compare-table th {
         background: #f8f9fa;
-        font-weight: 600;
-        color: #555;
-        width: 150px;
     }
-    .compare-table td {
-        vertical-align: top;
-    }
-    .compare-table .car-header {
-        background: #1a1a2e;
-        color: white;
+    .car-header {
+        padding: 1rem;
         text-align: center;
-        padding: 0;
     }
-    .compare-table .car-header img {
+    .car-header img {
         width: 100%;
         height: 150px;
         object-fit: cover;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
     }
-    .compare-table .car-header .no-image {
+    .car-header .no-image {
         width: 100%;
         height: 150px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
+        color: white;
         font-size: 3rem;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
     }
-    .compare-table .car-header .car-name {
-        padding: 1rem;
+    .car-header h3 {
+        font-size: 1rem;
+        color: #1a1a2e;
+        margin-bottom: 0.25rem;
     }
-    .compare-table .car-header .car-name h3 {
-        margin: 0;
-        font-size: 1.1rem;
-    }
-    .compare-table .car-header .car-name a {
-        color: white;
+    .car-header h3 a {
+        color: inherit;
         text-decoration: none;
     }
-    .compare-table .car-header .car-name a:hover {
+    .car-header h3 a:hover {
         color: #e94560;
     }
-    .compare-table tr:hover {
-        background: #fafafa;
+    .car-header .brand {
+        color: #666;
+        font-size: 0.85rem;
     }
-    .compare-table .best-value {
-        background: #d4edda;
-        font-weight: bold;
-        color: #155724;
+    .compare-row {
+        display: grid;
+        grid-template-columns: 200px repeat({{ cars_with_specs|length }}, 1fr);
+        border-bottom: 1px solid #eee;
     }
-    .compare-table .price-value {
-        color: #e94560;
-        font-weight: bold;
+    .compare-row:last-child {
+        border-bottom: none;
     }
-    .spec-empty {
-        color: #999;
-        font-style: italic;
+    .compare-row:hover {
+        background: #f8f9fa;
     }
-    .remove-car {
-        display: inline-block;
-        margin-top: 0.5rem;
-        padding: 0.25rem 0.75rem;
-        background: rgba(255,255,255,0.2);
-        border-radius: 4px;
-        color: white;
-        text-decoration: none;
-        font-size: 0.8rem;
+    .spec-label {
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        color: #555;
+        background: #f8f9fa;
     }
-    .remove-car:hover {
-        background: #e94560;
+    .spec-value {
+        padding: 0.75rem 1rem;
+        text-align: center;
+        color: #333;
+    }
+    .spec-value.empty {
+        color: #ccc;
+    }
+    .no-cars {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+    @media (max-width: 768px) {
+        .compare-header, .compare-row {
+            grid-template-columns: 120px repeat({{ cars_with_specs|length }}, 1fr);
+        }
+        .car-header img, .car-header .no-image {
+            height: 100px;
+        }
     }
 </style>
 {% endblock %}
@@ -126,68 +112,49 @@
 {% block content %}
 <a href="{% url 'cars:car_list' %}" class="back-link">&larr; Back to Catalog</a>
 
-<div class="compare-header">
-    <h1>Compare Cars</h1>
-</div>
+<h2 style="margin-bottom: 1.5rem; color: #1a1a2e;">Compare Cars</h2>
 
-{% if cars %}
-<div class="compare-table-container">
-    <table class="compare-table">
-        <thead>
-            <tr>
-                <th></th>
-                {% for car in cars %}
-                <td class="car-header">
-                    {% with car.get_image_url as img_url %}
-                    {% if img_url %}
-                    <img src="{{ img_url }}" alt="{{ car.name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="no-image" style="display: none;">&#128663;</div>
-                    {% else %}
-                    <div class="no-image">&#128663;</div>
-                    {% endif %}
-                    {% endwith %}
-                    <div class="car-name">
-                        <h3><a href="{% url 'cars:car_detail' car.pk %}">{{ car.name }}</a></h3>
-                        <a href="{% url 'cars:car_compare' %}?cars={% for c in cars %}{% if c.pk != car.pk %}{{ c.pk }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}" class="remove-car">Remove</a>
-                    </div>
-                </td>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for spec_field, spec_label in specs %}
-            <tr>
-                <th>{{ spec_label }}</th>
-                {% for car in cars %}
-                <td {% if spec_field == 'price' %}class="price-value"{% endif %}>
-                    {% with value=car|getattribute:spec_field %}
-                    {% if value %}
-                        {% if spec_field == 'price' %}
-                            ${{ value|floatformat:0|intcomma }}
-                        {% elif spec_field == 'horsepower' %}
-                            {{ value }} HP
-                        {% elif spec_field == 'top_speed' %}
-                            {{ value }} km/h
-                        {% elif spec_field == 'acceleration' %}
-                            {{ value }}s
-                        {% else %}
-                            {{ value }}
-                        {% endif %}
-                    {% else %}
-                        <span class="spec-empty">-</span>
-                    {% endif %}
-                    {% endwith %}
-                </td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% if cars_with_specs %}
+<div class="compare-container">
+    <!-- Header with car images and names -->
+    <div class="compare-header">
+        <div class="label-cell"></div>
+        {% for item in cars_with_specs %}
+        <div class="car-header">
+            {% with item.car.get_image_url as img_url %}
+            {% if img_url %}
+            <img src="{{ img_url }}" alt="{{ item.car.name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="no-image" style="display: none;">&#128663;</div>
+            {% else %}
+            <div class="no-image">&#128663;</div>
+            {% endif %}
+            {% endwith %}
+            <h3><a href="{% url 'cars:car_detail' item.car.pk %}">{{ item.car.name }}</a></h3>
+            <p class="brand">{{ item.car.brand }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Spec rows -->
+    {% for field, label, source in specs %}
+    <div class="compare-row">
+        <div class="spec-label">{{ label }}</div>
+        {% for item in cars_with_specs %}
+        <div class="spec-value {% if source == 'car' %}{% if not item.car|getattr:field %}empty{% endif %}{% else %}{% if not item.gen or not item.gen|getattr:field %}empty{% endif %}{% endif %}">
+            {% if source == 'car' %}
+                {{ item.car|getattr:field|default:"-" }}
+            {% else %}
+                {% if item.gen %}{{ item.gen|getattr:field|default:"-" }}{% else %}-{% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
 </div>
 {% else %}
-<div class="compare-empty">
-    <h2>No cars to compare</h2>
-    <p>Select cars from the catalog to compare their specifications.</p>
+<div class="no-cars">
+    <h3>No cars selected for comparison</h3>
+    <p>Please select at least 2 cars from the catalog to compare.</p>
     <a href="{% url 'cars:car_list' %}" class="btn" style="margin-top: 1rem;">Browse Cars</a>
 </div>
 {% endif %}
